@@ -1,4 +1,3 @@
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Exxx_experiment.m 
 % Rapid serial tactile presentation + TOJ task
@@ -48,14 +47,14 @@
 
 % clear all                                                                 % we clear parameters?
 % this is for debugging
-win.DoDummyMode             = 0;                                            % (1) is for debugging without an eye-tracker, (0) is for running the experiment
-win.stim_test               = 1;                                            % (1) for testing the stimulators (always when doing the experiment), (0) to skip
-% PsychDebugWindowConfiguration(0,0.7);                                       % this is for debugging with a single screen
+win.DoDummyMode             = 1;                                            % (1) is for debugging without an eye-tracker, (0) is for running the experiment
+win.stim_test               = 0;                                            % (1) for testing the stimulators (always when doing the experiment), (0) to skip
+PsychDebugWindowConfiguration(0,1);                                       % this is for debugging with a single screen
 
 % Screen parameters
-win.whichScreen             = 0;                                            % (CHANGE?) here we define the screen to use for the experiment, it depend on which computer we are using and how the screens are conected so it might need to be changed if the experiment starts in the wrong screen
+win.whichScreen             = 2;                                            % (CHANGE?) here we define the screen to use for the experiment, it depend on which computer we are using and how the screens are conected so it might need to be changed if the experiment starts in the wrong screen
 win.FontSZ                  = 20;                                           % font size
-win.bkgcolor                = 0;                                          % screen background color, 127 gray
+win.bkgcolor                = 0;                                            % screen background color, 127 gray
 win.Vdst                    = 66;                                           % (!CHANGE!) viewer's distance from screen [cm]         
 win.res                     = [1920 1080];                                  %  horizontal x vertical resolution [pixels]
 win.wdth                    = 51;                                           %  51X28.7 cms is teh size of Samsung Syncmaster P2370 in BPN lab EEG rechts
@@ -63,24 +62,27 @@ win.hght                    = 28.7;                                         %
 win.pixxdeg                 = win.res(1)/(2*180/pi*atan(win.wdth/2/win.Vdst));% 
 win.center_thershold        = 3*win.pixxdeg;                                % distance from the midline threshold for gaze contingent end of trial
 win.fixpos                  = [win.res(1)/2, win.res(2)/2];
-win.tgtpos                  = [win.fixpos(1,1)/2+win.fixpos(2,1)/2 win.fixpos(3,1)/2+win.fixpos(1,1)/2];
+% win.tgtpos                  = [win.fixpos(1,1)/2+win.fixpos(2,1)/2 win.fixpos(1,1)/2+win.fixpos(1,1)/2];
 win.fixcolor                = 127;
 win.fixrad                  = 10;
+
 % Tactile stimulation settings (using the box stimulator)
 win.tact_freq               = 200;                                          % frequency of stimulation in Hz
 win.stim_dur                = .025;                                         % duration of tactile stimulation. The vibrator takes some time to stop its motion so for around 50 ms we use 25 ms of stimulation time (ask Tobias for the exact latencies they have measured)
 win.tact_minlat             = .8;
 win.tact_rndlat             = .4;
+win.total_tact              = 4500;                                         % 4500 total tact and 450 test gives 4500-2*450=3600 stimuli (900 per condition) outside the two last testing ones 
+win.total_test              = 450;
 
 win.halflife                = 30;
-win.decay                   = log(2)./halflife;         %lambda
-win.min_length              = 1;
+win.decay                   = log(2)./win.halflife;         %lambda
+win.min_length              = 2;
 
 
 % Blocks and trials
-win.exp_trials              = 2400;
-win.t_perblock              = 30;
-win.calib_every             = 4; 
+win.exp_trials              = win.total_test;
+win.t_perblock              = 9;
+win.calib_every             = 5; 
 
 % Audio, white noise parameters
 win.wn_vol                  = 1;                                           % (CHANGE?) adjust to subject comfort
@@ -292,19 +294,26 @@ win.el.eye_used = Eyelink('EyeAvailable');
 
 Eyelink('WaitForModeReady', 500);
 
-[image,map,alpha]   = imread([exp_path 'stimuli/blackongrt.jpg']);          % drift correction dot image
-fixIndex            = Screen('MakeTexture', win.hndl, image);               % this is one of the way PTB deals with images, the image matrix is transformed in a texture with a handle that can be user later to draw the image in theb PRB screen
+% [image,map,alpha]   = imread([exp_path 'stimuli/blackongrt.jpg']);          % drift correction dot image
+% fixIndex            = Screen('MakeTexture', win.hndl, image);               % this is one of the way PTB deals with images, the image matrix is transformed in a texture with a handle that can be user later to draw the image in theb PRB screen
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Randomization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-nBlocks             = win.exp_trials./win.t_perblock;                       % # experimental block without counting the first test one
-% win.blockcond       = reshape(repmat(randsample(repmat([1 2,5 6,9 10],1,nBlocks/6),nBlocks),...
-%                          win.t_perblock,1),1,win.exp_trials);          % 1 (gc-l), 2 (gc-r),  5 (gr-ll), 6 (gr-l),  9 (gl-r) ,10 (gl-rr)
-win.blockcond       = [reshape(randsample(repmat([1;5;9], win.exp_trials/2/3,1),win.exp_trials/2,1),win.t_perblock,nBlocks/2),...
-    reshape(randsample(repmat([2;6;10], win.exp_trials/2/3,1),win.exp_trials/2,1),win.t_perblock,nBlocks/2)];
+rvals = [randsample(2:1:win.total_tact-1-win.total_test,win.total_test-1),...
+    win.total_tact-win.total_test];                                         % here we sample -win.total_test so we can add 1 in the next line (and so we can sample the space of trial stimulation every 1 instead of two)
+rvals = cumsum(1+diff([0 sort(rvals)]));                                    % length of every trial, stimulation occurs with a flat hazard function, with win.total_test tests, and win.total_tact stimulations. sum(diff([0 sort(rvals)])) is then equal to  win.total_tact
+    
+
+nBlocks             = win.exp_trials./win.t_perblock;                       % # experimental block counting the first test one
+win.blockcond       = repmat(randsample([1 2],2),1,nBlocks/2);              % 1 uncrossed 2 crossed
+
+% continue here
+
+% win.blockcond       = [reshape(randsample(repmat([1;5;9], win.exp_trials/2/3,1),win.exp_trials/2,1),win.t_perblock,nBlocks/2),...
+%     reshape(randsample(repmat([2;6;10], win.exp_trials/2/3,1),win.exp_trials/2,1),win.t_perblock,nBlocks/2)];
 win.blockcond       = win.blockcond(:,randsample(nBlocks,nBlocks));
 win.blockcond       = win.blockcond(:)';
 nTrials             = win.exp_trials;                                       % Total # of trial

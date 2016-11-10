@@ -1,8 +1,30 @@
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Exxx
 
-trialdur    = 90;  %~seconds
-halflife    = 30;
+win.tact_minlat             = .8;
+win.tact_rndlat             = .4;
+win.total_tact              = 4500;
+win.total_test              = 450;
+
+figure,hold on
+nsim  = 500;
+edges = 1.5:1:100;
+for s = 1:nsim
+    rvals = [randsample(2:1:win.total_tact-1-win.total_test,win.total_test-1),win.total_tact-win.total_test];               % stimulation occurs with a flat hazard function, with win.total_test tests, and win.total_tact stimulations. sum(diff([0 sort(rvals)])) is then equal to  win.total_tact
+    %sort(1+diff([1 sort(rvals)]))
+    n = histc(1+diff([1 sort(rvals)]),edges);
+    plot(edges+.5,n)
+end
+    
+halflife    = 30;  % # events
+decay       = log(2)./halflife;         %lambda
+mean_life   = 1/decay;
+min_length  = 1;
+
+rvals       = round(min_length+(-1./decay .* log(rand([1 100]))));
+
+trialdur    = 90;  % events
+halflife    = 30;  % # events
 decay       = log(2)./halflife;         %lambda
 mean_life   = 1/decay;
 min_length  = 1;
