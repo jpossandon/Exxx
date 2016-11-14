@@ -47,12 +47,12 @@
 
 % clear all                                                                 % we clear parameters?
 % this is for debugging
-win.DoDummyMode             = 1;                                            % (1) is for debugging without an eye-tracker, (0) is for running the experiment
-win.stim_test               = 0;                                            % (1) for testing the stimulators (always when doing the experiment), (0) to skip
-PsychDebugWindowConfiguration(0,1);                                       % this is for debugging with a single screen
+win.DoDummyMode             = 0;                                            % (1) is for debugging without an eye-tracker, (0) is for running the experiment
+win.stim_test               = 1;                                            % (1) for testing the stimulators (always when doing the experiment), (0) to skip
+%  PsychDebugWindowConfiguration(0,1);                                       % this is for debugging with a single screen
 
 % Screen parameters
-win.whichScreen             = 2;                                            % (CHANGE?) here we define the screen to use for the experiment, it depend on which computer we are using and how the screens are conected so it might need to be changed if the experiment starts in the wrong screen
+win.whichScreen             = 0;                                            % (CHANGE?) here we define the screen to use for the experiment, it depend on which computer we are using and how the screens are conected so it might need to be changed if the experiment starts in the wrong screen
 win.FontSZ                  = 20;                                           % font size
 win.bkgcolor                = 0;                                            % screen background color, 127 gray
 win.Vdst                    = 66;                                           % (!CHANGE!) viewer's distance from screen [cm]         
@@ -69,7 +69,7 @@ win.fixrad                  = 10;
 
 % Tactile stimulation settings 
 win.tact_freq               = 200;                                          % frequency of stimulation in Hz
-win.stim_dur                = .025;                                         % duration of tactile stimulation. The vibrator takes some time to stop its motion so for around 50 ms we use 25 ms of stimulation time (ask Tobias for the exact latencies they have measured)
+win.stim_dur                = .015;                                         % duration of tactile stimulation. The vibrator takes some time to stop its motion so for around 50 ms we use 25 ms of stimulation time (ask Tobias for the exact latencies they have measured)
 win.tact_minlat             = .8;                                           % ISI durign the sequence goes from tact_minlat to tact_max_lat, according to a flat hazard function
 win.halflife                = .1;
 win.decay                   = log(2)./win.halflife;                         % lambda
@@ -137,7 +137,7 @@ Screen('Preference', 'SkipSyncTests', 2)                                    % fo
                                 win.whichScreen,win.bkgcolor);  
 [win.cntr(1), win.cntr(2)]  = WindowCenter(win.hndl);                       % get where is the display screen center
 Screen('BlendFunction',win.hndl, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);     % enable alpha blending for smooth drawing
-% HideCursor(win.hndl);                                                     % this to hide the mouse
+HideCursor(win.hndl);                                                     % this to hide the mouse
 Screen('TextSize', win.hndl, win.FontSZ);                                   % sets teh font size of the text to be diplayed
 KbName('UnifyKeyNames');                                                    
 win.start_time = clock;
@@ -155,7 +155,7 @@ freq                        = 48000;                                        % no
 dur                         = 5;                                            % noise duration in seconds (noise goes in a loop so duration is not so relevant)
 wavedata1                   = rand(1,freq*dur)*2-1;                         % the noise
 wavedata2                   = sin(2.*pi.*win.tact_freq.*...                 % the stimulus
-                                0:1/freq:dur-1/freq);      
+                                [0:1/freq:dur-1/freq]);      
 wavedata                    = [wavedata1 ; wavedata2];     
 nrchannels                  = 2;                                           
 
@@ -191,16 +191,15 @@ texts.txt1     = double(['Die Funktionsf' 228 'higkeit der Ger' 228 'te muss '..
 texts.txt2     = double(['Stimulatoren werden auf den Handr' 252 'cken besfestigt ...\n' texts.txtdev]);
 texts.txt3     = double(['Der linke Stimulator wird getestet (vibriert drei mal), ...\n danach ' texts.txtdev]);
 texts.txt4     = double(['Der rechte Stimulator wird getestet (vibriert drei mal), ...\n danach ' texts.txtdev]);
-texts.txt6     = double(['Beginn des Experiments \n Block 1 \n Die H' 228 ...
-            'nde bitte Links positionieren. \n Zum Beginnen die ' texts.txtdev]);
+texts.txt6     = double(['Beginn des Experiments \n Test Block \n Die H' 228 ...
+            'nde bitte parallel positionieren (parallel). \n Zum Beginnen die ' texts.txtdev]);
 texts.txt7     = double(['Beginn des Experiments\n Test Block \n  F' 252 'r den n' 228 ...
-            'chsten Block bitte Rechts positionieren. \n Zum Fortfahren die ' texts.txtdev]);      
-        
+            'chsten Block bitte die H' 228 'nde ' 252 'berkreuzen (crossed). \n Zum Fortfahren die ' texts.txtdev]);      
 texts.txt10    = double(['F' 252 'r den n' 228 'chsten Block die H' 228 ...
-        'nde Links positionieren. Zum Fortfahren die ' texts.txtdev]);
+        'nde parallel positionieren. Zum Fortfahren die ' texts.txtdev]);
 texts.txt11    = double(['F' 252 'r den n' 228 'chsten Block die H' 228 ...
-        'nde Rechts positionieren. Zum Fortfahren die '  texts.txtdev]);
-texts.txt12    = double(['Links oder Rechts']);
+        'nde ' 252 'berkreuzen. Zum Fortfahren die '  texts.txtdev]);
+% texts.txt12    = double(['Links oder Rechts']);
 %these are for debugging
 % handstr  = {'Left','Right','','','Left','Right'};
 % crossstr = {'Uncrossed','Crossed'};
@@ -227,7 +226,7 @@ Eyelink('Command', sprintf('add_file_preamble_text ''%s''', win.setStr ));      
 wrect = Screen('Rect', win.hndl);                                           
 Eyelink('Message','DISPLAY_COORDS %d %d %d %d', 0, 0, wrect(1), wrect(2));  % write display resolution to EDF file
 
-% ListenChar(2)                                                               % disable MATLAB windows' keyboard listen (no unwanted edits)
+ListenChar(2)                                                               % disable MATLAB windows' keyboard listen (no unwanted edits)
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -298,10 +297,6 @@ win.el.eye_used = Eyelink('EyeAvailable');
 % end
 
 Eyelink('WaitForModeReady', 500);
-
-% [image,map,alpha]   = imread([exp_path 'stimuli/blackongrt.jpg']);          % drift correction dot image
-% fixIndex            = Screen('MakeTexture', win.hndl, image);               % this is one of the way PTB deals with images, the image matrix is transformed in a texture with a handle that can be user later to draw the image in theb PRB screen
-
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Randomization
@@ -388,11 +383,11 @@ for nT = 1:nTrials                                                          % lo
     
         elseif win.block_cross(nT)==1 
             texts.txt8    = double(['Block ' num2str(b) '/' num2str(nBlocks+1) ' beendet \n Pause \n  F' 252 'r den n' 228 ... 
-            'chsten Block bitte die H' 228 'nde Links positionieren. \n Zum Fortfahren die ' texts.txtdev]);
-         draw_instructions_and_wait(texts.txt2,win.bkgcolor,win.hndl,win.in_dev,1)
+            'chsten Block bitte die H' 228 'nde parallel positionieren (parallel). \n Zum Fortfahren die ' texts.txtdev]);
+         draw_instructions_and_wait(texts.txt8,win.bkgcolor,win.hndl,win.in_dev,1)
         elseif  win.block_cross(nT)==2         % crossed
             texts.txt8    = double(['Block ' num2str(b) '/' num2str(nBlocks+1) ' beendet \n Pause \n  F' 252 'r den n' 228 ... 
-            'chsten Block bitte die H' 228 'nde Rechts positionieren. \n Zum Fortfahren die ' texts.txtdev]);
+            'chsten Block bitte die H' 228 'nde ' 252 'berkreuzen (crossed). \n Zum Fortfahren die ' texts.txtdev]);
          draw_instructions_and_wait(texts.txt8,win.bkgcolor,win.hndl,win.in_dev,1)
         end
            
@@ -413,11 +408,10 @@ for nT = 1:nTrials                                                          % lo
             GetClicks(win.hndl,0);                                                      
         end
         Screen('FillRect', win.hndl, win.bkgcolor);                         % remove what was writte or displayed
-        Screen('DrawTexture', win.hndl, fixIndex);                          % drift correction image
         Screen('Flip', win.hndl);
         Eyelink('WaitForModeReady', 50);
         PsychPortAudio('Start', pahandle, 0, 0, 1);
-        EyelinkDoDriftCorrect2(win.el,win.res(1)/2,win.res(2)/2,0)          % drift correction 
+        EyelinkDoDriftCorrect2(win.el,win.res(1)/2,win.res(2)/2,1,1)          % drift correction 
        % beginning of each block we have 10 seconds of baseline
         Eyelink('Command','record_status_message ''Block %d Trial %d''',b,nT);
         Eyelink('WaitForModeReady', 25);
@@ -433,7 +427,7 @@ for nT = 1:nTrials                                                          % lo
      Eyelink('command', '!*write_ioport 0x378 0')
     % TRIAL START
     if win.block_start(nT) == 0
-        PsychPortAudio('Start', pahandle, 0, 0, 1);               % starts the white noise, third input is set to 0 so it loops until is sopped
+%         PsychPortAudio('Start', pahandle, 0, 0, 1);               % starts the white noise, third input is set to 0 so it loops until is sopped
         Eyelink('Command','record_status_message ''Block %d Trial %d''',b,nT);
         Eyelink('WaitForModeReady', 25);
         Eyelink('message','TRIALID %d', nT);                                    % message about trial start in the eye-tracker
@@ -453,7 +447,7 @@ for nT = 1:nTrials                                                          % lo
                 end
             end
     end
-    WaitSecs(.1)
+    WaitSecs(.1);
      
     last_tact      = GetSecs;
    
@@ -468,19 +462,20 @@ for nT = 1:nTrials                                                          % lo
         if cs==1
             Eyelink('message','SYNCTIME'); 
         end
-        while GetSecs<last_tact+win.trial_tactsoa(ntt)
+        while GetSecs<last_tact+win.trial_tactsoa(ntt);
             continue
         end
         Eyelink('command', '!*write_ioport 0x378 %d',win.trial_trigger(ntt));                        
         last_tact = WaitSecs(win.stim_dur);
         Eyelink('command', '!*write_ioport 0x378 %d',0);                        % flush the parallel port
+        last_trig = win.trial_trigger(ntt);
         ntt = ntt+1; 
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % SUBJECT GAZE RESPONSE
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    WaitSecs(.5)                                                            % 500 ms to present the response display
+    WaitSecs(.25)                                                            % 500 ms to present the response display
     
     Screen('FrameRect', win.hndl, [200 200 200], resrect',3)
     Screen('FillOval',  win.hndl, [255 0 0;200 200 200;200 200 200]', fixdots')
@@ -491,15 +486,15 @@ for nT = 1:nTrials                                                          % lo
     answ = NaN; tAns = [];
     while GetSecs-tvis<5                                                    %  check that the gaze moves to the left or right response sqare
         [data,type] = get_ETdata;
-            if type ==7 % start fixation
-                if abs(data.gx(1)-win.tgtpos(1,1))<win.center_thershold && ...
-                    abs(data.gy(1)-win.fixpos(1,2))<win.center_thershold 
+            if type ==6 % start fixation
+                if abs(data.genx(1)-win.tgtpos(1,1))<win.center_thershold && ...
+                    abs(data.geny(1)-win.tgtpos(1,2))<win.center_thershold 
                     answ = 1;
                     tAns = GetSecs;
                     Eyelink('message','TRIAL_RESULT %d',answ);  
                    break
-                elseif abs(data.gx(1)-win.tgtpos(2,1))<win.center_thershold && ...
-                    abs(data.gy(1)-win.fixpos(2,2))<win.center_thershold 
+                elseif abs(data.genx(1)-win.tgtpos(2,1))<win.center_thershold && ...
+                    abs(data.geny(1)-win.tgtpos(2,2))<win.center_thershold 
                     answ = 2;
                     tAns = GetSecs;
                     Eyelink('message','TRIAL_RESULT %d',answ);  
@@ -510,14 +505,19 @@ for nT = 1:nTrials                                                          % lo
     Eyelink('command', '!*write_ioport 0x378 %d',0);
     Screen('FillOval',  win.hndl, win.fixcolor, fixdots(1,:))
     
-%     PsychPortAudio('Stop', pahandle);
-    
-    win.respose(nT)= answ;
+%   TOJ Results;
+    if (ismember(last_trig,[13,18]) && answ==1) || (ismember(last_trig,[10,21]) && answ==2)
+        win.correct(nT) = 1;
+    elseif (ismember(last_trig,[13,18]) && answ==2) || (ismember(last_trig,[10,21]) && answ==1)
+        win.correct(nT) = 0;
+    end
+    win.response(nT)= answ;
     if isempty(tAns)
         win.RT(nT) = NaN;
+        win.correct(nT) = NaN;
         Eyelink('message','TRIAL_RESULT 0');  
     else
-        win.RT(nT) = tAns-tvis;
+        win.RT(nT)      = tAns-tvis;
     end
     
     Eyelink('WaitForModeReady', 50);
@@ -565,5 +565,4 @@ Eyelink('Shutdown');                                                        % cl
 Screen('CloseAll');                                                         % close the PTB screen
 Screen('Preference','Verbosity', prevVerbos);                               % restore previous verbosity
 Screen('Preference','VisualDebugLevel', prevVisDbg);                        % restore prev vis dbg
-% fclose(obj);                                                                % close the serial port
 ListenChar(1)                                                               % restore MATLAB keyboard listening (on command window)
