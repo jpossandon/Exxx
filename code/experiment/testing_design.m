@@ -16,12 +16,12 @@ for s = 1:nsim
     plot(edges+.5,n)
 end
     
-halflife    = 30;  % # events
+halflife    = .1;  % # events
 decay       = log(2)./halflife;         %lambda
 mean_life   = 1/decay;
-min_length  = 1;
+min_length  = .8;
 
-rvals       = round(min_length+(-1./decay .* log(rand([1 100]))));
+rvalsx       = min_length+(-1./decay .* log(rand([1 win.total_tact])));
 
 trialdur    = 90;  % events
 halflife    = 30;  % # events
