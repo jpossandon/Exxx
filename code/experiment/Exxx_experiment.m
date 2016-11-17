@@ -76,8 +76,8 @@ win.decay                   = log(2)./win.halflife;                         % la
 win.tact_max_lat            = 1.8;                                          % to avoid getting by chance a very large number, we set a limit on 99% of the exponential distribution [win.tact_minlat+win.halflife:win.halflife:1.8;cumsum(1./[2.^[1:10]])]
 
 % Blocks and trials
-win.total_tact              = 4500;                                         % 4500 total tact and 450 test gives 4500-2*450=3600 stimuli (900 per condition) beside the two last ones of the TOJ task 
-win.total_test              = 450;
+win.total_tact              = 3600;                                         % 4500 total tact and 450 test gives 4500-2*450=3600 stimuli (900 per condition) beside the two last ones of the TOJ task 
+win.total_test              = 360;
 win.exp_trials              = win.total_test;
 win.t_perblock              = 9;
 win.calib_every             = 5; 
@@ -318,7 +318,7 @@ win.trial_trigger   = nan(1,win.total_tact);
 
 nT                  = 1;
 win.seqstart        = [1 rvals(1:end-1)+1];
-seqstart_hand       = [1 rvals(1:end-1)+1-[2:2:2*449]];
+seqstart_hand       = [1 rvals(1:end-1)+1-[2:2:2*nTrials-1]];
 for bb = 1:nBlocks
     for tt = 1:win.t_perblock
         if win.block_cross(bb) == 1 % uncrossed
@@ -365,7 +365,7 @@ resrect = [win.tgtpos(1,1)-win.fixrad*10,win.tgtpos(1,2)-win.fixrad*10,...
         win.tgtpos(1,1)+win.fixrad*10,win.tgtpos(1,2)+win.fixrad*10;...
         win.tgtpos(2,1)-win.fixrad*10,win.tgtpos(2,2)-win.fixrad*10,...
         win.tgtpos(2,1)+win.fixrad*10,win.tgtpos(2,2)+win.fixrad*10];
-b                   = 0;                                                    % block flag
+b                   = 1;                                                    % block flag
 ntt                 = 1;
 for nT = 1:nTrials                                                          % loop throught the experiment trials
     
@@ -376,31 +376,32 @@ for nT = 1:nTrials                                                          % lo
     if  win.block_start(nT) == 1                                            % if it is a trial that starts a block   
         PsychPortAudio('Stop', pahandle)                                    % if the white noise was on, we stop it here
         
-        if nT ==1 && win.block_cross(nT)==1                                % practice trials and uncrossed
+        if nT ==1 && win.block_cross(b)==1                                % practice trials and uncrossed
             draw_instructions_and_wait(texts.txt6,win.bkgcolor,win.hndl,win.in_dev,1)
-        elseif nT ==1 && win.block_cross(nT)==2                       % practice trials amd crossed, this according to randomization should be unnecesary
+        elseif nT ==1 && win.block_cross(b)==2                       % practice trials amd crossed, this according to randomization should be unnecesary
             draw_instructions_and_wait(texts.txt7,win.bkgcolor,win.hndl,win.in_dev,1)
     
-        elseif win.block_cross(nT)==1 
+        elseif win.block_cross(b)==1 
             texts.txt8    = double(['Block ' num2str(b) '/' num2str(nBlocks+1) ' beendet \n Pause \n  F' 252 'r den n' 228 ... 
             'chsten Block bitte die H' 228 'nde parallel positionieren (parallel). \n Zum Fortfahren die ' texts.txtdev]);
          draw_instructions_and_wait(texts.txt8,win.bkgcolor,win.hndl,win.in_dev,1)
-        elseif  win.block_cross(nT)==2         % crossed
+        elseif  win.block_cross(b)==2         % crossed
             texts.txt8    = double(['Block ' num2str(b) '/' num2str(nBlocks+1) ' beendet \n Pause \n  F' 252 'r den n' 228 ... 
             'chsten Block bitte die H' 228 'nde ' 252 'berkreuzen (crossed). \n Zum Fortfahren die ' texts.txtdev]);
          draw_instructions_and_wait(texts.txt8,win.bkgcolor,win.hndl,win.in_dev,1)
         end
            
-        b = b+1;
+     
         if nT>1 %&& ismember(nT, win.t_perblock+win.test_trials+1:win.calib_every*win.t_perblock:nTrials)                              % we calibrate every two small blocks
             EyelinkDoTrackerSetup(win.el);
         end
         
-        if win.block_cross(nT)==1 
+        if win.block_cross(b)==1 
             DrawFormattedText(win.hndl, texts.txt10,'center','center',255,55);
         else
             DrawFormattedText(win.hndl,texts.txt11,'center','center',255,55);
         end
+        b = b+1; 
         Screen('Flip', win.hndl);
         if win.in_dev == 1                                                              
             waitForKB_linux({'space'});                                           
@@ -434,7 +435,7 @@ for nT = 1:nTrials                                                          % lo
         Eyelink('WaitForModeReady', 25);
         Eyelink('StartRecording');
     end
-      
+    
     Screen('FillOval',  win.hndl, 256, fixdots(1,:))                             % Change in fixation dot indicates the start of the trial sequence
     Screen('Flip', win.hndl);   
     
@@ -451,7 +452,7 @@ for nT = 1:nTrials                                                          % lo
      
     last_tact      = GetSecs;
    
-    Eyelink('message','METATR block %d',win.block_cross(nT));               % block condition
+    Eyelink('message','METATR block %d',win.block_cross(b-1));               % block condition
     Eyelink('WaitForModeReady', 25);
     Eyelink('message','METATR block_start %d',win.block_start(nT));         % if it was the first image in the block
   
@@ -519,7 +520,7 @@ for nT = 1:nTrials                                                          % lo
     else
         win.RT(nT)      = tAns-tvis;
     end
-    
+
     Eyelink('WaitForModeReady', 50);
     Eyelink('StopRecording');
     Screen('Flip', win.hndl);
