@@ -49,7 +49,7 @@
 % this is for debugging
 win.DoDummyMode             = 0;                                            % (1) is for debugging without an eye-tracker, (0) is for running the experiment
 win.stim_test               = 1;                                            % (1) for testing the stimulators (always when doing the experiment), (0) to skip
-%  PsychDebugWindowConfiguration(0,1);                                       % this is for debugging with a single screen
+PsychDebugWindowConfiguration(0,.5);                                       % this is for debugging with a single screen
 
 % Screen parameters
 win.whichScreen             = 0;                                            % (CHANGE?) here we define the screen to use for the experiment, it depend on which computer we are using and how the screens are conected so it might need to be changed if the experiment starts in the wrong screen
@@ -76,8 +76,8 @@ win.decay                   = log(2)./win.halflife;                         % la
 win.tact_max_lat            = 1.8;                                          % to avoid getting by chance a very large number, we set a limit on 99% of the exponential distribution [win.tact_minlat+win.halflife:win.halflife:1.8;cumsum(1./[2.^[1:10]])]
 
 % Blocks and trials
-win.total_tact              = 3600;                                         % 4500 total tact and 450 test gives 4500-2*450=3600 stimuli (900 per condition) beside the two last ones of the TOJ task 
-win.total_test              = 360;
+win.total_tact              = 4500;                                         % 4500 total tact and 450 test gives 4500-2*450=3600 stimuli (900 per condition) beside the two last ones of the TOJ task 
+win.total_test              = 450;
 win.exp_trials              = win.total_test;
 win.t_perblock              = 9;
 win.calib_every             = 5; 
@@ -382,11 +382,11 @@ for nT = 1:nTrials                                                          % lo
             draw_instructions_and_wait(texts.txt7,win.bkgcolor,win.hndl,win.in_dev,1)
     
         elseif win.block_cross(b)==1 
-            texts.txt8    = double(['Block ' num2str(b) '/' num2str(nBlocks+1) ' beendet \n Pause \n  F' 252 'r den n' 228 ... 
+            texts.txt8    = double(['Block ' num2str(b) '/' num2str(nBlocks) ' beendet \n Pause \n  F' 252 'r den n' 228 ... 
             'chsten Block bitte die H' 228 'nde parallel positionieren (parallel). \n Zum Fortfahren die ' texts.txtdev]);
          draw_instructions_and_wait(texts.txt8,win.bkgcolor,win.hndl,win.in_dev,1)
         elseif  win.block_cross(b)==2         % crossed
-            texts.txt8    = double(['Block ' num2str(b) '/' num2str(nBlocks+1) ' beendet \n Pause \n  F' 252 'r den n' 228 ... 
+            texts.txt8    = double(['Block ' num2str(b) '/' num2str(nBlocks) ' beendet \n Pause \n  F' 252 'r den n' 228 ... 
             'chsten Block bitte die H' 228 'nde ' 252 'berkreuzen (crossed). \n Zum Fortfahren die ' texts.txtdev]);
          draw_instructions_and_wait(texts.txt8,win.bkgcolor,win.hndl,win.in_dev,1)
         end
@@ -401,7 +401,7 @@ for nT = 1:nTrials                                                          % lo
         else
             DrawFormattedText(win.hndl,texts.txt11,'center','center',255,55);
         end
-        b = b+1; 
+         
         Screen('Flip', win.hndl);
         if win.in_dev == 1                                                              
             waitForKB_linux({'space'});                                           
@@ -415,6 +415,7 @@ for nT = 1:nTrials                                                          % lo
         EyelinkDoDriftCorrect2(win.el,win.res(1)/2,win.res(2)/2,1,1)          % drift correction 
        % beginning of each block we have 10 seconds of baseline
         Eyelink('Command','record_status_message ''Block %d Trial %d''',b,nT);
+        b = b+1;
         Eyelink('WaitForModeReady', 25);
         Eyelink('message','TRIALID %d', nT);                                    % message about trial start in the eye-tracker
         Eyelink('WaitForModeReady', 25);
@@ -429,7 +430,7 @@ for nT = 1:nTrials                                                          % lo
     % TRIAL START
     if win.block_start(nT) == 0
 %         PsychPortAudio('Start', pahandle, 0, 0, 1);               % starts the white noise, third input is set to 0 so it loops until is sopped
-        Eyelink('Command','record_status_message ''Block %d Trial %d''',b,nT);
+        Eyelink('Command','record_status_message ''Block %d Trial %d''',b-1,nT);
         Eyelink('WaitForModeReady', 25);
         Eyelink('message','TRIALID %d', nT);                                    % message about trial start in the eye-tracker
         Eyelink('WaitForModeReady', 25);
